@@ -55,6 +55,35 @@ const server = http.createServer((req, res) => {
         res.end();
       }
     });
+  } else if (req.url === "/users" && req.method === "POST") {
+    let body = [];
+
+    req.on("data", (chunk) => body.push(chunk));
+    req.on("end", () => {
+      body = JSON.parse(body[0].toString());
+
+      fs.promises
+        .readFile(myWay("users.json"), "utf-8")
+        .then((data) => {
+          data = JSON.parse(data);
+
+          body.id = data[data.length - 1].id + 1;
+
+          data.push(body);
+
+          return fs.promises.writeFile(
+            myWay("users.json"),
+            JSON.stringify(data),
+            "utf-8"
+          );
+        })
+        .then(() => {
+          res.writeHead(201, { "content-type": "application/json" });
+          res.write(JSON.stringify(body));
+          res.end();
+        })
+        .catch((err) => console.log(err));
+    });
   }
 });
 

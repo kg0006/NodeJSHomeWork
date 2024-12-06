@@ -27,16 +27,34 @@ const server = http.createServer((req, res) => {
         let url = req.url.split("/");
         let user = data.find((el) => el.id === +url[url.length - 1]);
 
-        console.log(user);
-
         if (user) {
           res.writeHead(200, { "content-type": "application/json" });
-          res.end(JSON.stringify(user));
+          res.write(JSON.stringify(user));
+          res.end();
         } else {
           res.writeHead(404, { "content-type": "text/plain" });
-          res.end("User not found");
+          res.write("User not found");
+          res.end();
         }
       });
+  } else if (req.url.includes("?") && req.method === "GET") {
+    const searchIndex = req.url.indexOf("?");
+    const queryParam = req.url.slice(searchIndex + 1).split("=")[1];
+    fs.promises.readFile(myWay("users.json"), "utf-8").then((data) => {
+      const users = JSON.parse(data);
+      const newUsers = users.filter((u) =>
+        u.name.toLowerCase().includes(queryParam.toLowerCase())
+      );
+      if (newUsers.length) {
+        res.writeHead(200, { "content-type": "application/json" });
+        res.write(JSON.stringify(newUsers));
+        res.end();
+      } else {
+        res.writeHead(404, { "content-type": "text/plain" });
+        res.write("There is nor users by searching param");
+        res.end();
+      }
+    });
   }
 });
 
